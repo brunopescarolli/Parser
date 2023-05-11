@@ -1,12 +1,12 @@
-require 'tty-table'
 
 class Estado
-  attr_accessor :regra, :ponto, :inicio
+  attr_accessor :regra, :ponto, :inicio, :comentario
 
-  def initialize(regra, ponto, inicio)
+  def initialize(regra, ponto, inicio, comentario = '')
     @regra = regra
     @ponto = ponto
-    @inicio = inicio
+    @inicio = inicio # estado de Origem
+    @comentario = comentario
   end
 
   def completo?
@@ -17,8 +17,12 @@ class Estado
     regra.direita[ponto]
   end
 
-  def advance
-    Estado.new(regra, ponto + 1, inicio)
+  def advance(k, regra_anterior)
+    Estado.new(regra, ponto + 1, inicio, "Scan de S(#{k})(#{regra_anterior})")
+  end
+
+  def complete(k, regra1, regra2)
+    Estado.new(regra, ponto + 1, inicio, "Completo de #{regra1} e S(#{k})(#{regra2})")
   end
 
   def ==(other)
@@ -35,17 +39,18 @@ class Estado
 
   def to_s
     direita = @regra.direita.join.insert(ponto, '.')
-    "Estado: #{@regra.esquerda} -> #{direita}"
+    "#{@regra.esquerda} -> #{direita}"
   end
 end
 
 class S
   attr_reader :estados, :estados_visitados
 
-  def initialize(index)
+  def initialize(index, entrada)
     @index = index
     @estados = Set.new
     @estados_visitados = Set.new
+    @entrada = entrada
   end
 
   def <<(element)
@@ -60,13 +65,5 @@ class S
 
   def empty?
     (estados - estados_visitados).empty?
-  end
-
-  def to_s
-    output = "==== Tabela #{@index} ====\n"
-    estados.each do |regra|
-      output << regra.to_s + "\n"
-    end
-    output + "==================\n"
   end
 end
